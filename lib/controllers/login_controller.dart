@@ -19,6 +19,6 @@ class LoginController extends GetxController {
   }
 
   void togglePasswordVisibility() {
-    isObscure.value = !isObscure.value; // Toggle the visibility state
+    isObscure.value = !isObscure.value;
   }
 }

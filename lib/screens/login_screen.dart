@@ -108,6 +108,7 @@ class LoginScreen extends StatelessWidget {
                     onTap: loginController.isButtonEnabled.value
                         ? () {
                             //TODO: sign in action
+                            Get.toNamed('/todo');
                           }
                         : null,
                     splashColor: Colors.blue,
