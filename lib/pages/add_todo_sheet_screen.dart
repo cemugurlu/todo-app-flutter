@@ -4,7 +4,7 @@ import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/pages/details_sheet_screen.dart';
 
 class AddTodoSheetScreen extends StatelessWidget {
-  final TodoController todoController = Get.put(TodoController());
+  final TodoController todoController = Get.find<TodoController>();
 
   @override
   Widget build(BuildContext context) {
@@ -55,14 +55,14 @@ class AddTodoSheetScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-              controller: todoController.todoNameController,
+              onChanged: (value) => todoController.todoName.value = value,
               decoration: const InputDecoration(
                 labelText: 'Enter your todo',
               ),
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: todoController.notesController,
+              onChanged: (value) => todoController.notes.value = value,
               decoration: const InputDecoration(
                 labelText: 'Notes',
               ),
