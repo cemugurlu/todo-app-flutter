@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginController extends GetxController {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final email = ''.obs;
   final password = ''.obs;
   final isObscure = true.obs;
-
   RxBool isButtonEnabled = false.obs;
 
   @override

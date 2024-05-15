@@ -1,6 +1,5 @@
-// home_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter_sfsymbols/flutter_sfsymbols.dart';
 import 'package:get/get.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -45,8 +44,13 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: () {
                   Get.toNamed('/login');
                 },
-                icon: const Icon(Icons.mail),
-                label: const Text('Sign in with Email'),
+                icon: const Icon(
+                  (SFSymbols.ant),
+                ),
+                label: const Text(
+                  'Sign in with Email',
+                  style: TextStyle(color: Colors.black),
+                ),
               ),
             ),
             const SizedBox(height: 10),

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plantist/controllers/login_controller.dart';
 
 class LoginScreen extends StatelessWidget {
   final LoginController loginController = Get.put(LoginController());
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -30,7 +38,6 @@ class LoginScreen extends StatelessWidget {
                 suffixIcon: Obx(
                   () {
                     if (loginController.email.value.isNotEmpty) {
-                      //TODO: check the email
                       return Padding(
                         padding: const EdgeInsets.all(15.0),
                         child: Container(
@@ -105,12 +112,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(40.0),
-                    onTap: loginController.isButtonEnabled.value
-                        ? () {
-                            //TODO: sign in action
-                            Get.toNamed('/todo');
-                          }
-                        : null,
+                    onTap: loginController.isButtonEnabled.value ? _signIn : null,
                     splashColor: Colors.blue,
                     child: const Center(
                       child: Text(
@@ -126,5 +128,34 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _signIn() async {
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()));
+
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: loginController.email.value,
+        password: loginController.password.value,
+      );
+
+      // Hide loading indicator
+      Get.back();
+
+      // Navigate to the TodoScreen
+      Get.toNamed('/todo');
+    } catch (e) {
+      // Hide loading indicator
+      Get.back();
+
+      // Show error message using SnackBar
+      Get.snackbar(
+        'Error',
+        'Failed to sign in: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }
