@@ -8,6 +8,7 @@ class LoginController extends GetxController {
   final password = ''.obs;
   final isObscure = true.obs;
   RxBool isButtonEnabled = false.obs;
+  final isEmailExists = false.obs; // Observable to track if email exists
 
   @override
   void onInit() {
@@ -22,5 +23,29 @@ class LoginController extends GetxController {
 
   void togglePasswordVisibility() {
     isObscure.value = !isObscure.value;
+  }
+
+  Future<void> checkEmailExistence(String email) async {
+    try {
+      print('Checking email existence for: $email');
+      // Check if the email is properly formatted
+      final emailPattern = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailPattern.hasMatch(email)) {
+        throw FormatException('Invalid email format');
+      }
+
+      // Check if the email already exists in Firebase Auth
+      final user = await _auth.fetchSignInMethodsForEmail(email);
+      if (user.isNotEmpty) {
+        isEmailExists.value = true;
+        print('Email already exists');
+      } else {
+        isEmailExists.value = false;
+        print('Email does not exist');
+      }
+    } catch (e) {
+      print('Failed to check email existence: $e');
+      isEmailExists.value = false; // Reset the email existence status
+    }
   }
 }

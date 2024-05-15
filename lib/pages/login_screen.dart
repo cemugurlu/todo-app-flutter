@@ -37,7 +37,7 @@ class LoginScreen extends StatelessWidget {
                 hintText: 'E-mail',
                 suffixIcon: Obx(
                   () {
-                    if (loginController.email.value.isNotEmpty) {
+                    if (loginController.isEmailExists.value) {
                       return Padding(
                         padding: const EdgeInsets.all(15.0),
                         child: Container(
@@ -58,7 +58,10 @@ class LoginScreen extends StatelessWidget {
                   },
                 ),
               ),
-              onChanged: (value) => loginController.email.value = value,
+              onChanged: (value) {
+                loginController.email.value = value;
+                loginController.checkEmailExistence(value); // Check email existence when text changes
+              },
             ),
             const SizedBox(height: 10),
             Obx(
@@ -124,6 +127,7 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -134,7 +138,7 @@ class LoginScreen extends StatelessWidget {
     try {
       Get.dialog(const Center(child: CircularProgressIndicator()));
 
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      await _auth.signInWithEmailAndPassword(
         email: loginController.email.value,
         password: loginController.password.value,
       );

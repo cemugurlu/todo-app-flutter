@@ -1,22 +1,43 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:plantist/models/todo_model.dart';
 
 class TodoController extends GetxController {
   var todos = <Todo>[].obs;
+  final TextEditingController todoNameController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
 
-  void addTodo(Todo todo) {
-    todos.add(todo);
-  }
+  void addTodo() {
+    final todoName = todoNameController.text.trim();
+    final notes = notesController.text.trim();
 
-  @override
-  void onInit() {
-    super.onInit();
-    addTodo(Todo(name: 'Make lasagna', category: 'Food', date: DateTime.now()));
-    addTodo(Todo(name: 'Finish the project', category: 'Work', date: DateTime.now()));
-    addTodo(Todo(name: 'Hang out', category: 'Personal', date: DateTime.now()));
+    if (todoName.isEmpty) {
+      Get.snackbar('Error', 'Todo name cannot be empty', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    final newTodo = Todo(
+      title: todoName,
+      category: 'Uncategorized',
+      date: DateTime.now(),
+      description: notes,
+    );
+
+    todos.add(newTodo);
+    Get.back();
   }
 
   void toggleCompleted(int index) {
     todos[index].toggleCompleted();
   }
+
+  @override
+  void onClose() {
+    todoNameController.dispose();
+    notesController.dispose();
+    super.onClose();
+  }
+
+  // Getter method to observe todos using Obx
+  RxList<Todo> get todoList => todos;
 }

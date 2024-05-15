@@ -14,10 +14,11 @@ class WelcomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 50),
             Image.asset(
-              'assets/your_app_icon.png',
-              height: 100,
-              width: 100,
+              'assets/plantist_logo.png',
+              height: 400,
+              width: 400,
             ),
             const SizedBox(height: 20),
             const Text(

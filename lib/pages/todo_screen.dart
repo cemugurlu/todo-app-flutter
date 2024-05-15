@@ -56,7 +56,7 @@ class TodoScreen extends StatelessWidget {
                         ),
                       );
                     }),
-                    title: Text(todo.name),
+                    title: Text(todo.title),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
