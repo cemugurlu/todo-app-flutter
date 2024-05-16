@@ -1,6 +1,9 @@
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:plantist/models/todo_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -35,7 +38,7 @@ class TodoController extends GetxController {
     super.onInit();
   }
 
-  void addTodo() {
+  void addTodo() async {
     final todoNameValue = todoName.value.trim();
     final notesValue = notes.value.trim();
     final String? userID = getCurrentUser();
@@ -57,9 +60,12 @@ class TodoController extends GetxController {
 
       _addTodoToFirestore(newTodo);
 
+      todos.add(newTodo);
+
       todoName.value = '';
       notes.value = '';
       selectedDate.value = null;
+
       Get.back();
     }
   }
@@ -131,4 +137,62 @@ class TodoController extends GetxController {
   }
 
   RxList<Todo> get todoList => todos;
+
+  List<Todo> get todayTodos {
+    return todos.where((todo) => isToday(todo.selectedDate)).toList();
+  }
+
+  List<Todo> get tomorrowTodos {
+    return todos.where((todo) => isTomorrow(todo.selectedDate)).toList();
+  }
+
+  List<Todo> get thisWeekTodos {
+    return todos.where((todo) => isThisWeek(todo.selectedDate)).toList();
+  }
+
+  bool isToday(DateTime? date) {
+    if (date == null) return false;
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+
+  bool isTomorrow(DateTime? date) {
+    if (date == null) return false;
+    final now = DateTime.now();
+    final tomorrow = now.add(Duration(days: 1));
+    return date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+  }
+
+  bool isThisWeek(DateTime? date) {
+    if (date == null) return false;
+    final now = DateTime.now();
+    final endOfWeek = now.add(Duration(days: DateTime.daysPerWeek - now.weekday));
+    return date.isAfter(now) && date.isBefore(endOfWeek) && !isTomorrow(date);
+  }
+
+  // Future<void> attachFile() async {
+  //   final XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+  //   if (file != null) {
+  //     try {
+  //       final String fileName = file.path.split('/').last;
+  //       final Reference firebaseStorageRef = FirebaseStorage.instance.ref().child('uploads/$fileName');
+  //       final UploadTask uploadTask = firebaseStorageRef.putFile(File(file.path));
+  //       await uploadTask.whenComplete(() => null);
+  //       final String downloadUrl = await firebaseStorageRef.getDownloadURL();
+
+  //       // Add the URL to the todo's attachments list
+  //       final List<String> attachments = [downloadUrl];
+  //       todos.forEach((todo) {
+  //         if (todo.selected) {
+  //           todo.attachments.addAll(attachments);
+  //           _updateTodoInFirestore(todo);
+  //         }
+  //       });
+  //     } catch (e) {
+  //       print('Failed to upload file: $e');
+  //       Get.snackbar('Error', 'Failed to upload file: $e');
+  //     }
+  //   }
+  // }
 }
