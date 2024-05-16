@@ -4,7 +4,7 @@ import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/pages/details_sheet_screen.dart';
 
 class AddTodoSheetScreen extends StatelessWidget {
-  final TodoController todoController = Get.find<TodoController>();
+  final TodoController todoController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,8 @@ class AddTodoSheetScreen extends StatelessWidget {
             const SizedBox(height: 20),
             OutlinedButton(
               onPressed: () {
-                _showDetailsBottomSheet(context);
+                _showDetailsBottomSheet();
+                print('onPresseded');
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -78,34 +79,22 @@ class AddTodoSheetScreen extends StatelessWidget {
                 ),
                 side: const BorderSide(color: Colors.black),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 3, top: 5, bottom: 5),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Details',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          'Today',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
+              child: const ListTile(
+                title: Text(
+                  'Details',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 18,
                   ),
-                  Icon(Icons.arrow_forward_ios, color: Colors.black),
-                ],
+                ),
+                subtitle: Text(
+                  'Today',
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 16,
+                  ),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios, color: Colors.black),
               ),
             ),
           ],
@@ -114,11 +103,12 @@ class AddTodoSheetScreen extends StatelessWidget {
     );
   }
 
-  void _showDetailsBottomSheet(BuildContext context) {
-    final expandedHeight = MediaQuery.of(context).size.height * 0.85;
-
-    showModalBottomSheet(
-      context: context,
+  void _showDetailsBottomSheet() {
+    Get.bottomSheet(
+      DetailsSheetScreen(
+        selectedDate: todoController.selectedDate,
+        isCalendarVisible: todoController.isCalendarVisible,
+      ),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -126,12 +116,6 @@ class AddTodoSheetScreen extends StatelessWidget {
           topRight: Radius.circular(20),
         ),
       ),
-      builder: (BuildContext context) {
-        return SizedBox(
-          height: expandedHeight,
-          child: DetailsSheetScreen(),
-        );
-      },
     );
   }
 }

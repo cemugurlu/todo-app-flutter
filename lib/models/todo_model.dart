@@ -6,17 +6,17 @@ class Todo {
   late String title;
   late String description;
   late String category;
-  late DateTime date;
   late RxBool isCompleted;
-  late String userID; // Add userID field to the Todo model
+  late String userID;
+  late DateTime? selectedDate;
 
   Todo({
     required this.id,
     required this.title,
     required this.description,
     required this.category,
-    required this.date,
-    required this.userID, // Initialize userID in the constructor
+    required this.userID,
+    this.selectedDate,
     bool isCompleted = false,
   }) {
     this.isCompleted = isCompleted.obs;
@@ -32,8 +32,8 @@ class Todo {
       title: map['title'],
       description: map['description'],
       category: map['category'],
-      date: (map['date'] as Timestamp).toDate(),
-      userID: map['userID'], // Assign userID from Firestore data
+      userID: map['userID'],
+      selectedDate: map['selectedDate'] != null ? (map['selectedDate'] as Timestamp).toDate() : null,
       isCompleted: map['isCompleted'],
     );
   }

@@ -1,8 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/pages/add_todo_sheet_screen.dart';
-import 'dart:math';
+import 'package:intl/intl.dart';
 
 class TodoScreen extends StatelessWidget {
   final TodoController todoController = Get.put(TodoController());
@@ -35,12 +36,25 @@ class TodoScreen extends StatelessWidget {
             itemCount: todos.length,
             itemBuilder: (context, index) {
               final todo = todos[index];
-              final formattedDate = '${todo.date.day}/${todo.date.month}/${todo.date.year}';
-              return Column(
-                children: [
-                  ListTile(
-                    leading: Obx(() {
-                      return SizedBox(
+              final formattedDate = todo.selectedDate != null
+                  ? '${todo.selectedDate!.day}.${todo.selectedDate!.month}.${todo.selectedDate!.year}'
+                  : '';
+              return Dismissible(
+                key: Key(todo.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) {
+                  todoController.deleteTodo(index);
+                },
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: SizedBox(
+                        height: 30,
                         width: 30,
                         child: Checkbox(
                           value: todo.isCompleted.value,
@@ -54,29 +68,39 @@ class TodoScreen extends StatelessWidget {
                             color: randomColors[index % randomColors.length],
                           ),
                         ),
-                      );
-                    }),
-                    title: Text(todo.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Category: ${todo.category}'),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(formattedDate),
-                          ],
-                        ),
-                      ],
+                      ),
+                      title: Text(todo.title),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(todo.category),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(formattedDate),
+                                ],
+                              ),
+                              if (todo.selectedDate != null)
+                                Text(
+                                  DateFormat('dd.MM.yyyy').format(todo.selectedDate!),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                            ],
+                          ),
+                          if (index != todos.length - 1) Divider(),
+                        ],
+                      ),
+                      onTap: () {},
                     ),
-                    onTap: () {},
-                  ),
-                  if (index != todos.length - 1) const Divider(),
-                ],
+                  ],
+                ),
               );
             },
           );

@@ -10,6 +10,9 @@ class TodoController extends GetxController {
   var notes = ''.obs;
   var user = FirebaseAuth.instance.currentUser;
 
+  final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+  final RxBool isCalendarVisible = true.obs;
+
   final CollectionReference _todoCollection = FirebaseFirestore.instance.collection('todos');
 
   String? getCurrentUser() {
@@ -19,10 +22,10 @@ class TodoController extends GetxController {
     if (user != null) {
       String userID = user.uid;
       print('Current user ID: $userID');
-      return userID; // Return userID if it exists
+      return userID;
     } else {
       print('User is not authenticated.');
-      return null; // Return null if user is not authenticated
+      return null;
     }
   }
 
@@ -35,36 +38,39 @@ class TodoController extends GetxController {
   void addTodo() {
     final todoNameValue = todoName.value.trim();
     final notesValue = notes.value.trim();
+    final String? userID = getCurrentUser();
 
     if (todoNameValue.isEmpty) {
       Get.snackbar('Error', 'Todo name cannot be empty', snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
-    String? userID = getCurrentUser();
     if (userID != null) {
       final newTodo = Todo(
         id: UniqueKey().toString(),
         title: todoNameValue,
         category: 'Uncategorized',
-        date: DateTime.now(),
+        selectedDate: selectedDate.value ?? DateTime.now(),
         description: notesValue,
         userID: userID,
       );
 
       _addTodoToFirestore(newTodo);
 
-      fetchUserTodos();
+      todoName.value = '';
+      notes.value = '';
+      selectedDate.value = null;
+      Get.back();
     }
-
-    todoName.value = '';
-    notes.value = '';
-    Get.back();
   }
 
   void toggleCompleted(int index) {
     todos[index].toggleCompleted();
     _updateTodoInFirestore(todos[index]);
+  }
+
+  void deleteTodo(int index) {
+    _deleteTodoFromFirestore(todos[index].id);
   }
 
   void fetchUserTodos() async {
@@ -77,7 +83,7 @@ class TodoController extends GetxController {
           title: data['title'] ?? '',
           description: data['description'] ?? '',
           category: data['category'] ?? '',
-          date: (data['date'] as Timestamp).toDate(),
+          selectedDate: (data['date'] as Timestamp).toDate(),
           isCompleted: data['isCompleted'] ?? false,
           userID: data['userID'] ?? '',
         );
@@ -93,7 +99,7 @@ class TodoController extends GetxController {
         'title': todo.title,
         'description': todo.description,
         'category': todo.category,
-        'date': todo.date,
+        'date': todo.selectedDate,
         'isCompleted': todo.isCompleted.value,
         'userID': todo.userID,
         'createdAt': FieldValue.serverTimestamp(),
@@ -112,6 +118,15 @@ class TodoController extends GetxController {
       print('Todo updated successfully');
     } catch (e) {
       print('Failed to update todo: $e');
+    }
+  }
+
+  void _deleteTodoFromFirestore(String id) async {
+    try {
+      await _todoCollection.doc(id).delete();
+      print('Todo deleted successfully');
+    } catch (e) {
+      print('Failed to delete todo: $e');
     }
   }
 

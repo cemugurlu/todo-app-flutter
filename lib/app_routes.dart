@@ -10,5 +10,11 @@ final routes = [
   GetPage(name: '/', page: () => const WelcomeScreen()),
   GetPage(name: '/login', page: () => LoginScreen()),
   GetPage(name: '/todo', page: () => TodoScreen()),
-  GetPage(name: '/details', page: () => DetailsSheetScreen())
+  GetPage(
+    name: '/details',
+    page: () => DetailsSheetScreen(
+      selectedDate: Rx<DateTime?>(null),
+      isCalendarVisible: RxBool(false),
+    ),
+  ),
 ];
