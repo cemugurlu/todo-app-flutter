@@ -9,6 +9,7 @@ class Todo {
   late RxBool isCompleted;
   late String userID;
   late DateTime? selectedDate;
+  List<String> attachments;
 
   Todo({
     required this.id,
@@ -17,6 +18,7 @@ class Todo {
     required this.category,
     required this.userID,
     this.selectedDate,
+    this.attachments = const [],
     bool isCompleted = false,
   }) {
     this.isCompleted = isCompleted.obs;
@@ -24,6 +26,22 @@ class Todo {
 
   void toggleCompleted() {
     isCompleted.value = !isCompleted.value;
+    _updateTodoInFirestore();
+  }
+
+  void _updateTodoInFirestore() async {
+    try {
+      await FirebaseFirestore.instance.collection('todos').doc(id).update({
+        'isCompleted': isCompleted.value,
+      });
+      print('Todo updated successfully');
+    } catch (e) {
+      print('Failed to update todo: $e');
+    }
+  }
+
+  void addAttachment(String url) {
+    attachments.add(url);
   }
 
   factory Todo.fromMap(Map<String, dynamic> map, String id) {
