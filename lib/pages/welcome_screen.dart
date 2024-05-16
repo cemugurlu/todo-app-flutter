@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sfsymbols/flutter_sfsymbols.dart';
 import 'package:get/get.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -46,11 +46,12 @@ class WelcomeScreen extends StatelessWidget {
                   Get.toNamed('/login');
                 },
                 icon: const Icon(
-                  (SFSymbols.ant),
+                  Icons.mail,
+                  color: Colors.black,
                 ),
                 label: const Text(
                   'Sign in with Email',
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(fontSize: 19, color: Colors.black, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -59,10 +60,16 @@ class WelcomeScreen extends StatelessWidget {
               onTap: () {
                 Get.toNamed('/signup');
               },
-              child: const Text(
-                "Don't have an account? Sign up",
-                style: TextStyle(
-                  fontSize: 14,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: const Text(
+                  "Don't have an account? Sign up",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ),

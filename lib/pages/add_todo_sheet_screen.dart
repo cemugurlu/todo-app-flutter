@@ -71,7 +71,6 @@ class AddTodoSheetScreen extends StatelessWidget {
             OutlinedButton(
               onPressed: () {
                 _showDetailsBottomSheet();
-                print('onPresseded');
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -105,16 +104,17 @@ class AddTodoSheetScreen extends StatelessWidget {
 
   void _showDetailsBottomSheet() {
     Get.bottomSheet(
-      DetailsSheetScreen(
-        selectedDate: todoController.selectedDate,
-        isCalendarVisible: todoController.isCalendarVisible,
+      SizedBox(
+        width: double.infinity,
+        height: Get.height * 0.9,
+        child: DetailsSheetScreen(
+          selectedDate: todoController.selectedDate,
+          isCalendarVisible: todoController.isCalendarVisible,
+        ),
       ),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(300)),
       ),
     );
   }

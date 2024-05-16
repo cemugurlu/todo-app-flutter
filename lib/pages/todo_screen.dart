@@ -53,22 +53,20 @@ class TodoScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: SizedBox(
-                        height: 30,
-                        width: 30,
-                        child: Checkbox(
-                          value: todo.isCompleted.value,
-                          onChanged: (value) {
-                            todoController.toggleCompleted(index);
-                          },
-                          shape: const CircleBorder(),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          activeColor: const Color.fromRGBO(13, 22, 40, 1),
-                          side: BorderSide(
-                            color: randomColors[index % randomColors.length],
-                          ),
-                        ),
-                      ),
+                      leading: Obx(() => Checkbox(
+                            value: todo.isCompleted.value,
+                            onChanged: (value) {
+                              todoController.toggleCompleted(index);
+                            },
+                            // Increase the size of the Checkbox
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            activeColor: const Color.fromRGBO(13, 22, 40, 1),
+                            checkColor: Colors.white,
+                            side: BorderSide(
+                              color: randomColors[index % randomColors.length],
+                            ),
+                          )),
                       title: Text(todo.title),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
