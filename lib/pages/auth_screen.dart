@@ -3,18 +3,26 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:plantist/controllers/login_controller.dart';
 
-class LoginScreen extends StatelessWidget {
+enum AuthMode { login, signup }
+
+class AuthScreen extends StatelessWidget {
   final LoginController loginController = Get.put(LoginController());
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final AuthMode authMode;
+
+  AuthScreen({Key? key, required this.authMode}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -23,9 +31,9 @@ class LoginScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 20),
-            const Text(
-              'Sign in with Email',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            Text(
+              authMode == AuthMode.login ? 'Sign in with Email' : 'Sign up with Email',
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             const Text(
               'Enter your email and password',
@@ -106,23 +114,19 @@ class LoginScreen extends StatelessWidget {
             Obx(
               () => SizedBox(
                 height: 70,
-                child: Ink(
-                  decoration: BoxDecoration(
-                    color: loginController.isButtonEnabled.value
+                child: ElevatedButton(
+                  onPressed: loginController.isButtonEnabled.value ? _authenticate : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: loginController.isButtonEnabled.value
                         ? const Color.fromRGBO(13, 22, 40, 1)
-                        : const Color.fromRGBO(181, 185, 191, 1),
-                    borderRadius: BorderRadius.circular(40.0),
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(40.0),
-                    onTap: loginController.isButtonEnabled.value ? _signIn : null,
-                    splashColor: Colors.blue,
-                    child: const Center(
-                      child: Text(
-                        "Sign in",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                        : const Color.fromRGBO(182, 185, 191, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
+                  ),
+                  child: Text(
+                    authMode == AuthMode.login ? 'Sign in' : 'Create Account',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),
@@ -134,28 +138,33 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  void _signIn() async {
+  void _authenticate() async {
     try {
       Get.dialog(const Center(child: CircularProgressIndicator()));
 
-      await _auth.signInWithEmailAndPassword(
-        email: loginController.email.value,
-        password: loginController.password.value,
-      );
+      if (authMode == AuthMode.login) {
+        // Sign in
+        await _auth.signInWithEmailAndPassword(
+          email: loginController.email.value,
+          password: loginController.password.value,
+        );
+      } else {
+        // Sign up
+        await _auth.createUserWithEmailAndPassword(
+          email: loginController.email.value,
+          password: loginController.password.value,
+        );
+      }
 
-      // Hide loading indicator
       Get.back();
 
-      // Navigate to the TodoScreen
       Get.toNamed('/todo');
     } catch (e) {
-      // Hide loading indicator
       Get.back();
 
-      // Show error message using SnackBar
       Get.snackbar(
         'Error',
-        'Failed to sign in: ${e.toString()}',
+        'Failed to ${authMode == AuthMode.login ? 'sign in' : 'sign up'}: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
