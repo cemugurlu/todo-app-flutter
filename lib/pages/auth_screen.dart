@@ -98,6 +98,7 @@ class AuthScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: _signInWithBiometrics,
                 child: const Text('Sign In with Biometrics'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               ),
           ],
         ),

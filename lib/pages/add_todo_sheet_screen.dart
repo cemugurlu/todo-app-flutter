@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/pages/details_sheet_screen.dart';
 
@@ -93,22 +94,26 @@ class AddTodoSheetScreen extends StatelessWidget {
                 ),
                 side: const BorderSide(color: Colors.black),
               ),
-              child: const ListTile(
-                title: Text(
+              child: ListTile(
+                title: const Text(
                   'Details',
                   style: TextStyle(
                     color: Colors.black87,
                     fontSize: 18,
                   ),
                 ),
-                subtitle: Text(
-                  'Today',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 16,
-                  ),
-                ),
-                trailing: Icon(Icons.arrow_forward_ios, color: Colors.black),
+                subtitle: Obx(() {
+                  final selectedDate = todoController.selectedDate.value;
+                  final formattedDate = selectedDate != null ? DateFormat('dd.MM.yyyy').format(selectedDate) : 'Today';
+                  return Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 16,
+                    ),
+                  );
+                }),
+                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.black),
               ),
             ),
           ],

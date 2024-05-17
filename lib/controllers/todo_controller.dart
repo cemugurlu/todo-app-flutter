@@ -1,11 +1,11 @@
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:plantist/models/todo_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import 'package:plantist/models/todo_model.dart';
 
 class TodoController extends GetxController {
   var todos = <Todo>[].obs;
@@ -88,8 +88,12 @@ class TodoController extends GetxController {
     _updateTodoInFirestore(todos[index]);
   }
 
-  void deleteTodo(int index) {
-    _deleteTodoFromFirestore(todos[index].id);
+  void deleteTodoById(String id) {
+    final index = todos.indexWhere((todo) => todo.id == id);
+    if (index != -1) {
+      _deleteTodoFromFirestore(id);
+      todos.removeAt(index);
+    }
   }
 
   void fetchUserTodos() async {
@@ -152,60 +156,70 @@ class TodoController extends GetxController {
   RxList<Todo> get todoList => todos;
 
   List<Todo> get todayTodos {
-    return todos.where((todo) => isToday(todo.selectedDate)).toList();
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    return todos.where((todo) => isToday(todo.selectedDate, today)).toList();
   }
 
   List<Todo> get tomorrowTodos {
-    return todos.where((todo) => isTomorrow(todo.selectedDate)).toList();
+    final DateTime tomorrow = DateTime.now().add(const Duration(days: 1));
+    return todos.where((todo) => isTomorrow(todo.selectedDate, tomorrow)).toList();
   }
 
   List<Todo> get thisWeekTodos {
-    return todos.where((todo) => isThisWeek(todo.selectedDate)).toList();
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+
+    final DateTime threeDaysFromToday = today.add(const Duration(days: 3));
+    final DateTime eightDaysFromToday = today.add(const Duration(days: 8));
+
+    return todos.where((todo) {
+      final DateTime selectedDate = todo.selectedDate ?? DateTime.now();
+      return selectedDate.isAfter(today) && selectedDate.isBefore(eightDaysFromToday);
+    }).toList();
   }
 
-  bool isToday(DateTime? date) {
+  List<Todo> get moreThanOneWeekTodos {
+    final List<Todo> allTodos = todos.toList();
+    final DateTime now = DateTime.now();
+    final DateTime oneWeekLater = DateTime(now.year, now.month, now.day + 7);
+    return allTodos.where((todo) => isMoreThanOneWeek(todo.selectedDate, oneWeekLater)).toList();
+  }
+
+  List<Todo> get notDatedTodos {
+    return todos.where((todo) => todo.selectedDate == null).toList();
+  }
+
+  bool isToday(DateTime? date, DateTime today) {
     if (date == null) return false;
-    final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    final DateTime adjustedDate = DateTime(date.year, date.month, date.day);
+    return adjustedDate == today;
   }
 
-  bool isTomorrow(DateTime? date) {
+  bool isTomorrow(DateTime? date, DateTime tomorrow) {
     if (date == null) return false;
-    final now = DateTime.now();
-    final tomorrow = now.add(Duration(days: 1));
-    return date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+    final DateTime adjustedDate = DateTime(date.year, date.month, date.day);
+    final DateTime adjustedTomorrow = DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
+    return adjustedDate == adjustedTomorrow;
   }
 
-  bool isThisWeek(DateTime? date) {
+  bool isThisWeek(DateTime? date, DateTime startOfWeek, DateTime endOfWeek, DateTime today) {
     if (date == null) return false;
-    final now = DateTime.now();
-    final endOfWeek = now.add(Duration(days: DateTime.daysPerWeek - now.weekday));
-    return date.isAfter(now) && date.isBefore(endOfWeek) && !isTomorrow(date);
+    return date.isAfter(startOfWeek) && date.isBefore(endOfWeek) && !isToday(date, today);
   }
 
-  Future<void> attachFile() async {
-    final XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+  bool isMoreThanOneWeek(DateTime? date, DateTime oneWeekLater) {
+    if (date == null) return false;
+    final DateTime adjustedDate = DateTime(date.year, date.month, date.day);
+    return adjustedDate.isAfter(oneWeekLater);
+  }
 
-    if (file != null) {
-      try {
-        final String fileName = file.path.split('/').last;
-        final Reference firebaseStorageRef = FirebaseStorage.instance.ref().child('uploads/$fileName');
-        final UploadTask uploadTask = firebaseStorageRef.putFile(File(file.path));
-        await uploadTask.whenComplete(() => null);
-        final String downloadUrl = await firebaseStorageRef.getDownloadURL();
+  DateTime _startOfWeek(DateTime today) {
+    return today.subtract(Duration(days: today.weekday - 1));
+  }
 
-        // Add the URL to the todo's attachments list
-        final List<String> attachments = [downloadUrl];
-        todos.forEach((todo) {
-          if (todo.selected) {
-            todo.attachments.addAll(attachments);
-            _updateTodoInFirestore(todo);
-          }
-        });
-      } catch (e) {
-        print('Failed to upload file: $e');
-        Get.snackbar('Error', 'Failed to upload file: $e');
-      }
-    }
+  DateTime _endOfWeek(DateTime today) {
+    final int daysUntilEndOfWeek = 7 - today.weekday;
+    return DateTime(today.year, today.month, today.day + daysUntilEndOfWeek);
   }
 }

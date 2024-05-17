@@ -1,23 +1,14 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:plantist/controllers/todo_controller.dart';
+import 'package:plantist/models/todo_model.dart';
 import 'package:plantist/pages/add_todo_sheet_screen.dart';
-import 'package:intl/intl.dart';
+import 'package:plantist/widgets/todo_section.dart';
 
 class TodoScreen extends StatelessWidget {
   final TodoController todoController = Get.put(TodoController());
 
-  final List<Color> randomColors = List.generate(
-    100,
-    (index) => Color.fromRGBO(
-      Random().nextInt(256),
-      Random().nextInt(256),
-      Random().nextInt(256),
-      1,
-    ),
-  );
-
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,84 +22,55 @@ class TodoScreen extends StatelessWidget {
       ),
       body: Obx(
         () {
-          final todos = todoController.todos;
-          return ListView.builder(
-            itemCount: todos.length,
-            itemBuilder: (context, index) {
-              final todo = todos[index];
-              final formattedDate = todo.selectedDate != null
-                  ? '${todo.selectedDate!.day}.${todo.selectedDate!.month}.${todo.selectedDate!.year}'
-                  : '';
-              return Dismissible(
-                key: Key(todo.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  color: Colors.red,
-                  child: const Icon(Icons.delete, color: Colors.white),
+          final todayTodos = _sortTodos(todoController.todayTodos);
+          final tomorrowTodos = _sortTodos(todoController.tomorrowTodos);
+          final thisWeekTodos = _sortTodos(todoController.thisWeekTodos);
+          final moreThanOneWeekTodos = _sortTodos(todoController.moreThanOneWeekTodos);
+          final notDatedTodos = todoController.notDatedTodos;
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TodoSection(
+                  title: 'Today',
+                  todos: todayTodos,
+                  todoController: todoController,
                 ),
-                onDismissed: (direction) {
-                  todoController.deleteTodo(index);
-                },
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Obx(() => Checkbox(
-                            value: todo.isCompleted.value,
-                            onChanged: (value) {
-                              todoController.toggleCompleted(index);
-                            },
-                            // Increase the size of the Checkbox
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            activeColor: const Color.fromRGBO(13, 22, 40, 1),
-                            checkColor: Colors.white,
-                            side: BorderSide(
-                              color: randomColors[index % randomColors.length],
-                            ),
-                          )),
-                      title: Text(todo.title),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(todo.category),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Text(formattedDate),
-                                ],
-                              ),
-                              if (todo.selectedDate != null)
-                                Text(
-                                  DateFormat('dd.MM.yyyy').format(todo.selectedDate!),
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                            ],
-                          ),
-                          if (index != todos.length - 1) Divider(),
-                        ],
-                      ),
-                      onTap: () {},
-                    ),
-                  ],
+                const Divider(),
+                TodoSection(
+                  title: 'Tomorrow',
+                  todos: tomorrowTodos,
+                  todoController: todoController,
                 ),
-              );
-            },
+                const Divider(),
+                TodoSection(
+                  title: 'This Week',
+                  todos: thisWeekTodos,
+                  todoController: todoController,
+                ),
+                const Divider(),
+                TodoSection(
+                  title: 'More Than One Week',
+                  todos: moreThanOneWeekTodos,
+                  todoController: todoController,
+                ),
+                const Divider(),
+                TodoSection(
+                  title: 'Not Dated',
+                  todos: notDatedTodos,
+                  todoController: todoController,
+                ),
+              ],
+            ),
           );
         },
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 15.0),
+        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 15.0),
         child: SizedBox(
           width: double.infinity,
-          height: 80,
+          height: 60,
           child: ElevatedButton.icon(
             onPressed: () {
               _showAddTodoBottomSheet(context);
@@ -133,28 +95,32 @@ class TodoScreen extends StatelessWidget {
     );
   }
 
-  void _showAddTodoBottomSheet(BuildContext context) {
-    final initialHeight = MediaQuery.of(context).size.height * 0.8;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return SizedBox(
-              height: initialHeight,
-              child: AddTodoSheetScreen(),
-            );
-          },
-        );
-      },
-    );
+  List<Todo> _sortTodos(List<Todo> todos) {
+    return [...todos]..sort((a, b) => a.selectedDate!.compareTo(b.selectedDate!));
   }
+}
+
+void _showAddTodoBottomSheet(BuildContext context) {
+  final initialHeight = MediaQuery.of(context).size.height * 0.8;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(20),
+        topRight: Radius.circular(20),
+      ),
+    ),
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return SizedBox(
+            height: initialHeight,
+            child: AddTodoSheetScreen(),
+          );
+        },
+      );
+    },
+  );
 }
