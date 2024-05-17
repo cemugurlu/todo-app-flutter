@@ -67,6 +67,21 @@ class AddTodoSheetScreen extends StatelessWidget {
                 labelText: 'Notes',
               ),
             ),
+            const SizedBox(height: 10),
+            Obx(() {
+              return DropdownButton<String>(
+                value: todoController.selectedCategory.value,
+                onChanged: (newValue) {
+                  todoController.selectedCategory.value = newValue!;
+                },
+                items: todoController.categories.map((category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+              );
+            }),
             const SizedBox(height: 20),
             OutlinedButton(
               onPressed: () {

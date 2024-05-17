@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:plantist/controllers/todo_controller.dart';
 
 class DetailsSheetScreen extends StatelessWidget {
   final Rx<DateTime?> selectedDate;
   final RxBool isCalendarVisible;
+  final TodoController todoController = Get.find();
 
-  const DetailsSheetScreen({Key? key, required this.selectedDate, required this.isCalendarVisible}) : super(key: key);
+  DetailsSheetScreen({Key? key, required this.selectedDate, required this.isCalendarVisible}) : super(key: key);
 
   String formatDate(DateTime date) {
     final String day = date.day.toString().padLeft(2, '0');
@@ -98,7 +99,7 @@ class DetailsSheetScreen extends StatelessWidget {
               const SizedBox(height: 20),
               OutlinedButton(
                 onPressed: () {
-                  // Handle attach file button tap
+                  todoController.attachFile();
                 },
                 child: const ListTile(
                   title: Text(

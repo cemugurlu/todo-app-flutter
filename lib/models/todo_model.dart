@@ -10,6 +10,7 @@ class Todo {
   late String userID;
   late DateTime? selectedDate;
   List<String> attachments;
+  late bool selected; // New selected property
 
   Todo({
     required this.id,
@@ -20,6 +21,7 @@ class Todo {
     this.selectedDate,
     this.attachments = const [],
     bool isCompleted = false,
+    this.selected = false, // Initialize selected with false
   }) {
     this.isCompleted = isCompleted.obs;
   }

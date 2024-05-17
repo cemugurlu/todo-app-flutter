@@ -13,6 +13,17 @@ class TodoController extends GetxController {
   var notes = ''.obs;
   var user = FirebaseAuth.instance.currentUser;
 
+  var categories = [
+    'Work',
+    'Personal',
+    'Health & Fitness',
+    'Shopping',
+    'Family',
+    'Home',
+    'Hobbies',
+  ].obs;
+  var selectedCategory = 'Work'.obs; // Default category
+
   final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final RxBool isCalendarVisible = true.obs;
 
@@ -42,6 +53,7 @@ class TodoController extends GetxController {
     final todoNameValue = todoName.value.trim();
     final notesValue = notes.value.trim();
     final String? userID = getCurrentUser();
+    final selectedCategoryValue = selectedCategory.value;
 
     if (todoNameValue.isEmpty) {
       Get.snackbar('Error', 'Todo name cannot be empty', snackPosition: SnackPosition.BOTTOM);
@@ -52,7 +64,7 @@ class TodoController extends GetxController {
       final newTodo = Todo(
         id: UniqueKey().toString(),
         title: todoNameValue,
-        category: 'Uncategorized',
+        category: selectedCategoryValue,
         selectedDate: selectedDate.value ?? DateTime.now(),
         description: notesValue,
         userID: userID,
@@ -65,6 +77,7 @@ class TodoController extends GetxController {
       todoName.value = '';
       notes.value = '';
       selectedDate.value = null;
+      selectedCategory.value = 'Work';
 
       Get.back();
     }
@@ -170,29 +183,29 @@ class TodoController extends GetxController {
     return date.isAfter(now) && date.isBefore(endOfWeek) && !isTomorrow(date);
   }
 
-  // Future<void> attachFile() async {
-  //   final XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+  Future<void> attachFile() async {
+    final XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
 
-  //   if (file != null) {
-  //     try {
-  //       final String fileName = file.path.split('/').last;
-  //       final Reference firebaseStorageRef = FirebaseStorage.instance.ref().child('uploads/$fileName');
-  //       final UploadTask uploadTask = firebaseStorageRef.putFile(File(file.path));
-  //       await uploadTask.whenComplete(() => null);
-  //       final String downloadUrl = await firebaseStorageRef.getDownloadURL();
+    if (file != null) {
+      try {
+        final String fileName = file.path.split('/').last;
+        final Reference firebaseStorageRef = FirebaseStorage.instance.ref().child('uploads/$fileName');
+        final UploadTask uploadTask = firebaseStorageRef.putFile(File(file.path));
+        await uploadTask.whenComplete(() => null);
+        final String downloadUrl = await firebaseStorageRef.getDownloadURL();
 
-  //       // Add the URL to the todo's attachments list
-  //       final List<String> attachments = [downloadUrl];
-  //       todos.forEach((todo) {
-  //         if (todo.selected) {
-  //           todo.attachments.addAll(attachments);
-  //           _updateTodoInFirestore(todo);
-  //         }
-  //       });
-  //     } catch (e) {
-  //       print('Failed to upload file: $e');
-  //       Get.snackbar('Error', 'Failed to upload file: $e');
-  //     }
-  //   }
-  // }
+        // Add the URL to the todo's attachments list
+        final List<String> attachments = [downloadUrl];
+        todos.forEach((todo) {
+          if (todo.selected) {
+            todo.attachments.addAll(attachments);
+            _updateTodoInFirestore(todo);
+          }
+        });
+      } catch (e) {
+        print('Failed to upload file: $e');
+        Get.snackbar('Error', 'Failed to upload file: $e');
+      }
+    }
+  }
 }
