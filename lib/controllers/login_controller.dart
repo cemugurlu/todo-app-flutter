@@ -1,23 +1,30 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:plantist/auth_mode.dart';
 
 class LoginController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
   final email = ''.obs;
   final password = ''.obs;
-  final confirmPassword = ''.obs; // Added for signup scenario
+  final confirmPassword = ''.obs;
   final isObscure = true.obs;
   RxBool isButtonEnabled = false.obs;
-  final isEmailExists = false.obs; // Observable to track if email exists
+  final isEmailExists = false.obs;
+
+  String? biometricEmail;
+  String? biometricPassword;
 
   @override
   void onInit() {
     super.onInit();
     debounce(email, (_) => updateButtonState(), time: const Duration(milliseconds: 10));
     debounce(password, (_) => updateButtonState(), time: const Duration(milliseconds: 10));
-    debounce(confirmPassword, (_) => updateButtonState(),
-        time: const Duration(milliseconds: 10)); // Added for signup scenario
+    debounce(confirmPassword, (_) => updateButtonState(), time: const Duration(milliseconds: 10));
   }
 
   void updateButtonState() {
@@ -37,13 +44,11 @@ class LoginController extends GetxController {
   Future<void> checkEmailExistence(String email) async {
     try {
       print('Checking email existence for: $email');
-      // Check if the email is properly formatted
       final emailPattern = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
       if (!emailPattern.hasMatch(email)) {
-        throw FormatException('Invalid email format');
+        throw const FormatException('Invalid email format');
       }
 
-      // Check if the email already exists in Firebase Auth
       final user = await _auth.fetchSignInMethodsForEmail(email);
       if (user.isNotEmpty) {
         isEmailExists.value = true;
@@ -54,21 +59,53 @@ class LoginController extends GetxController {
       }
     } catch (e) {
       print('Failed to check email existence: $e');
-      isEmailExists.value = false; // Reset the email existence status
+      isEmailExists.value = false;
     }
   }
 
   Future<void> authenticate(AuthMode authMode) async {
     try {
       if (authMode == AuthMode.login) {
+        if (biometricEmail != null && biometricPassword != null) {
+          email.value = biometricEmail!;
+          password.value = biometricPassword!;
+        }
+
         await _auth.signInWithEmailAndPassword(email: email.value, password: password.value);
       } else {
         await _auth.createUserWithEmailAndPassword(email: email.value, password: password.value);
+
+        biometricEmail = email.value;
+        biometricPassword = password.value;
       }
     } catch (e) {
       print('Authentication failed: $e');
     }
   }
-}
 
-enum AuthMode { login, signup }
+  Future<bool> authenticateBiometric() async {
+    try {
+      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (!canCheckBiometrics) {
+        throw Exception('Biometric authentication not available.');
+      }
+
+      bool didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Please authenticate to proceed',
+      );
+
+      return didAuthenticate;
+    } catch (e) {
+      print('Biometric authentication failed: $e');
+      return false;
+    }
+  }
+
+  Future<void> saveUserId(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).set({'userId': userId});
+    } catch (e) {
+      print('Error saving user ID: $e');
+    }
+  }
+}

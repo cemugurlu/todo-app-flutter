@@ -1,6 +1,5 @@
-// app_routes.dart
-
 import 'package:get/get.dart';
+import 'package:plantist/auth_mode.dart';
 import 'package:plantist/pages/details_sheet_screen.dart';
 import 'package:plantist/pages/auth_screen.dart';
 import 'package:plantist/pages/todo_screen.dart';

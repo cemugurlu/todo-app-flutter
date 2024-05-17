@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:plantist/auth_mode.dart';
 import 'package:plantist/controllers/login_controller.dart';
-
-enum AuthMode { login, signup }
+import 'package:plantist/controllers/biometric_auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthScreen extends StatelessWidget {
   final LoginController loginController = Get.put(LoginController());
+  final BiometricAuthController biometricAuthController = Get.put(BiometricAuthController());
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final AuthMode authMode;
@@ -43,128 +44,210 @@ class AuthScreen extends StatelessWidget {
             TextField(
               decoration: InputDecoration(
                 hintText: 'E-mail',
-                suffixIcon: Obx(
-                  () {
-                    if (loginController.isEmailExists.value) {
-                      return Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color.fromRGBO(13, 22, 40, 1),
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      );
-                    } else {
-                      return const SizedBox();
-                    }
-                  },
-                ),
               ),
               onChanged: (value) {
                 loginController.email.value = value;
-                loginController.checkEmailExistence(value); // Check email existence when text changes
               },
             ),
             const SizedBox(height: 10),
-            Obx(
-              () => TextField(
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      loginController.togglePasswordVisibility();
-                    },
-                    child: Icon(
-                      loginController.isObscure.value ? Icons.visibility : Icons.visibility_off,
-                    ),
-                  ),
+            TextField(
+              decoration: const InputDecoration(
+                hintText: 'Password',
+              ),
+              obscureText: true,
+              onChanged: (value) {
+                loginController.password.value = value;
+              },
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 70,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (authMode == AuthMode.login) {
+                    _signIn();
+                  } else {
+                    _signup();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(13, 22, 40, 1),
                 ),
-                obscureText: loginController.isObscure.value,
-                onChanged: (value) => loginController.password.value = value,
+                child: Text(
+                  authMode == AuthMode.login ? 'Sign in' : 'Create Account',
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    print('Forgot password?');
-                  },
-                  child: const Text(
-                    'Forgot password?',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Obx(
-              () => SizedBox(
-                height: 70,
-                child: ElevatedButton(
-                  onPressed: loginController.isButtonEnabled.value ? _authenticate : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: loginController.isButtonEnabled.value
-                        ? const Color.fromRGBO(13, 22, 40, 1)
-                        : const Color.fromRGBO(182, 185, 191, 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Text(
-                    authMode == AuthMode.login ? 'Sign in' : 'Create Account',
-                    style: const TextStyle(color: Colors.white),
-                  ),
+            if (authMode == AuthMode.signup)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 244, 147, 1)),
+                onPressed: () async {
+                  final success = await biometricAuthController.authenticate();
+                  if (success) {
+                    _signup();
+                  }
+                },
+                child: const Text(
+                  'Use Biometrics for Sign Up',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
+            if (authMode == AuthMode.login)
+              ElevatedButton(
+                onPressed: _signInWithBiometrics,
+                child: const Text('Sign In with Biometrics'),
+              ),
           ],
         ),
       ),
     );
   }
 
-  void _authenticate() async {
+  void _signup() async {
     try {
       Get.dialog(const Center(child: CircularProgressIndicator()));
+      await _auth.createUserWithEmailAndPassword(
+        email: loginController.email.value,
+        password: loginController.password.value,
+      );
 
-      if (authMode == AuthMode.login) {
-        // Sign in
-        await _auth.signInWithEmailAndPassword(
-          email: loginController.email.value,
-          password: loginController.password.value,
-        );
-      } else {
-        // Sign up
-        await _auth.createUserWithEmailAndPassword(
-          email: loginController.email.value,
-          password: loginController.password.value,
-        );
-      }
+      final email = loginController.email.value;
+      final password = loginController.password.value;
+      biometricAuthController.saveUserCredentials(email, password);
 
       Get.back();
 
-      Get.toNamed('/todo');
+      _showBiometricSignInConfirmationDialog();
     } catch (e) {
       Get.back();
 
       Get.snackbar(
         'Error',
-        'Failed to ${authMode == AuthMode.login ? 'sign in' : 'sign up'}: ${e.toString()}',
+        'Failed to sign up: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void _signIn() async {
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()));
+
+      await _auth.signInWithEmailAndPassword(
+        email: loginController.email.value,
+        password: loginController.password.value,
+      );
+
+      Get.toNamed('/todo');
+    } catch (e) {
+      Get.back();
+      Get.snackbar(
+        'Error',
+        'Failed to sign in: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void _signInWithBiometrics() async {
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()));
+
+      final success = await biometricAuthController.authenticate();
+      if (success) {
+        final credentials = biometricAuthController.getUserCredentials();
+        if (credentials == null) {
+          throw Exception('Biometric credentials not found');
+        }
+
+        final email = credentials['email'];
+        final password = credentials['password'];
+        if (email == null || password == null) {
+          throw Exception('Email or password is null');
+        }
+
+        await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+        Get.toNamed('/todo');
+      } else {
+        Get.back();
+        Get.snackbar(
+          'Error',
+          'Biometric authentication failed',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.back();
+      Get.snackbar(
+        'Error',
+        'Failed to sign in: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  void _showBiometricSignInConfirmationDialog() {
+    Get.defaultDialog(
+      title: 'Biometric Sign-In',
+      middleText: 'Do you want to use biometrics for sign-in?',
+      confirm: ElevatedButton(
+        onPressed: () {
+          Get.back(result: true);
+        },
+        child: const Text('Yes'),
+      ),
+      cancel: ElevatedButton(
+        onPressed: () {
+          Get.back(result: false);
+        },
+        child: const Text('No'),
+      ),
+    ).then((value) {
+      if (value == true) {
+        _authenticate();
+      } else {
+        Get.offAllNamed('/todo');
+      }
+    });
+  }
+
+  void _authenticate() async {
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()));
+      final success = await biometricAuthController.authenticate();
+      if (success) {
+        await _auth.signInWithEmailAndPassword(
+          email: loginController.email.value,
+          password: loginController.password.value,
+        );
+
+        Get.offAllNamed('/todo');
+      } else {
+        Get.back();
+        Get.snackbar(
+          'Error',
+          'Biometric authentication failed',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.back();
+      Get.snackbar(
+        'Error',
+        'Failed to sign in: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,

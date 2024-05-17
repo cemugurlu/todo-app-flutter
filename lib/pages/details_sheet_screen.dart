@@ -84,9 +84,7 @@ class DetailsSheetScreen extends StatelessWidget {
                   )),
               const SizedBox(height: 20),
               OutlinedButton(
-                onPressed: () {
-                  // Handle priority button tap
-                },
+                onPressed: () {},
                 child: const ListTile(
                   title: Text(
                     'Priority',
