@@ -9,8 +9,9 @@ class Todo {
   late RxBool isCompleted;
   late String userID;
   late DateTime? selectedDate;
-  List<String> attachments;
-  late bool selected; // New selected property
+  late String imageUrl; // Add imageUrl field
+
+  late bool selected;
 
   Todo({
     required this.id,
@@ -19,9 +20,9 @@ class Todo {
     required this.category,
     required this.userID,
     this.selectedDate,
-    this.attachments = const [],
     bool isCompleted = false,
-    this.selected = false, // Initialize selected with false
+    this.selected = false,
+    this.imageUrl = '', // Initialize imageUrl field
   }) {
     this.isCompleted = isCompleted.obs;
   }
@@ -42,19 +43,28 @@ class Todo {
     }
   }
 
-  void addAttachment(String url) {
-    attachments.add(url);
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'category': category,
+      'selectedDate': selectedDate,
+      'description': description,
+      'userID': userID,
+      'isCompleted': isCompleted.value,
+      'imageUrl': imageUrl, // Include imageUrl in the map
+    };
   }
 
-  factory Todo.fromMap(Map<String, dynamic> map, String id) {
+  static Todo fromMap(Map<String, dynamic> map) {
     return Todo(
-      id: id,
+      id: map['id'],
       title: map['title'],
-      description: map['description'],
       category: map['category'],
+      selectedDate: map['selectedDate']?.toDate(),
+      description: map['description'],
       userID: map['userID'],
-      selectedDate: map['selectedDate'] != null ? (map['selectedDate'] as Timestamp).toDate() : null,
-      isCompleted: map['isCompleted'],
+      isCompleted: map['isCompleted'] == true.obs,
+      imageUrl: map['imageUrl'] ?? '', // Assign imageUrl from map, default to empty string if not present
     );
   }
 }

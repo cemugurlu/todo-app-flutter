@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:plantist/models/todo_model.dart';
 
 class TodoController extends GetxController {
@@ -9,6 +13,7 @@ class TodoController extends GetxController {
   var todoName = ''.obs;
   var notes = ''.obs;
   var user = FirebaseAuth.instance.currentUser;
+  final ImagePicker _picker = ImagePicker();
 
   var categories = [
     'Work',
@@ -19,10 +24,12 @@ class TodoController extends GetxController {
     'Home',
     'Hobbies',
   ].obs;
-  var selectedCategory = 'Work'.obs; // Default category
+  var selectedCategory = 'Work'.obs;
 
   final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final RxBool isCalendarVisible = true.obs;
+  var attachedImage = Rx<File?>(null);
+  var attachedImageUrl = ''.obs;
 
   final CollectionReference _todoCollection = FirebaseFirestore.instance.collection('todos');
 
@@ -65,7 +72,18 @@ class TodoController extends GetxController {
         selectedDate: selectedDate.value ?? DateTime.now(),
         description: notesValue,
         userID: userID,
+        imageUrl: '', // Initialize imageUrl
       );
+
+      if (attachedImage.value != null) {
+        final imageUrl = await uploadImageToStorage(attachedImage.value!, userID);
+        if (imageUrl != null) {
+          newTodo.imageUrl = imageUrl;
+        } else {
+          Get.snackbar('Error', 'Failed to upload image', snackPosition: SnackPosition.BOTTOM);
+          return;
+        }
+      }
 
       _addTodoToFirestore(newTodo);
 
@@ -75,8 +93,33 @@ class TodoController extends GetxController {
       notes.value = '';
       selectedDate.value = null;
       selectedCategory.value = 'Work';
+      attachedImage.value = null;
 
       Get.back();
+    } else {
+      Get.snackbar('Error', 'User not authenticated', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      attachedImage.value = File(pickedFile.path);
+    }
+  }
+
+  Future<String?> uploadImageToStorage(File file, String userID) async {
+    try {
+      final Reference storageReference =
+          FirebaseStorage.instance.ref().child('images/$userID/${DateTime.now().millisecondsSinceEpoch}');
+      final UploadTask uploadTask = storageReference.putFile(file);
+      final TaskSnapshot taskSnapshot = await uploadTask.whenComplete(() {});
+      final String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Failed to upload image: $e');
+      return null;
     }
   }
 
@@ -106,6 +149,7 @@ class TodoController extends GetxController {
           selectedDate: (data['date'] as Timestamp).toDate(),
           isCompleted: data['isCompleted'] ?? false,
           userID: data['userID'] ?? '',
+          imageUrl: data['imageUrl'] ?? '',
         );
       }).toList();
     } catch (e) {
@@ -122,6 +166,7 @@ class TodoController extends GetxController {
         'date': todo.selectedDate,
         'isCompleted': todo.isCompleted.value,
         'userID': todo.userID,
+        'imageUrl': todo.imageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
       print('Todo added successfully');
@@ -210,14 +255,5 @@ class TodoController extends GetxController {
     if (date == null) return false;
     final DateTime adjustedDate = DateTime(date.year, date.month, date.day);
     return adjustedDate.isAfter(oneWeekLater);
-  }
-
-  DateTime _startOfWeek(DateTime today) {
-    return today.subtract(Duration(days: today.weekday - 1));
-  }
-
-  DateTime _endOfWeek(DateTime today) {
-    final int daysUntilEndOfWeek = 7 - today.weekday;
-    return DateTime(today.year, today.month, today.day + daysUntilEndOfWeek);
   }
 }

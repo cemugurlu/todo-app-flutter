@@ -11,7 +11,6 @@ class TodoSection extends StatelessWidget {
   final List<Todo> todos;
   final TodoController todoController;
 
-  // List of random colors
   final List<Color> randomColors = [
     Colors.red,
     Colors.blue,
@@ -22,7 +21,6 @@ class TodoSection extends StatelessWidget {
     Colors.yellow,
   ];
 
-  // Generate a random color from the list
   Color getRandomColor() {
     final random = Random();
     return randomColors[random.nextInt(randomColors.length)];
@@ -74,7 +72,7 @@ class TodoSection extends StatelessWidget {
                         height: 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: getRandomColor()), // Set random color for border
+                          border: Border.all(color: getRandomColor()),
                         ),
                         child: Obx(() => Center(
                               child: Icon(

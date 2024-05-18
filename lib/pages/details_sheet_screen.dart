@@ -8,7 +8,11 @@ class DetailsSheetScreen extends StatelessWidget {
   final RxBool isCalendarVisible;
   final TodoController todoController = Get.find();
 
-  DetailsSheetScreen({Key? key, required this.selectedDate, required this.isCalendarVisible}) : super(key: key);
+  DetailsSheetScreen({
+    Key? key,
+    required this.selectedDate,
+    required this.isCalendarVisible,
+  }) : super(key: key);
 
   String formatDate(DateTime date) {
     final String day = date.day.toString().padLeft(2, '0');
@@ -85,25 +89,12 @@ class DetailsSheetScreen extends StatelessWidget {
                   )),
               const SizedBox(height: 20),
               OutlinedButton(
-                onPressed: () {},
-                child: const ListTile(
-                  title: Text(
-                    'Priority',
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios, color: Colors.black),
-                ),
-              ),
-              const SizedBox(height: 20),
-              OutlinedButton(
                 onPressed: () {
-                  // todoController.attachFile();
+                  todoController.pickImage();
                 },
                 child: const ListTile(
                   title: Text(
-                    'Attach a File',
+                    'Attach Image',
                     style: TextStyle(
                       color: Colors.black,
                     ),
@@ -111,6 +102,33 @@ class DetailsSheetScreen extends StatelessWidget {
                   trailing: Icon(Icons.attach_file, color: Colors.black),
                 ),
               ),
+              Obx(() {
+                final selectedImage = todoController.attachedImage.value;
+                if (selectedImage != null) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 20.0),
+                    height: 150,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.5),
+                          spreadRadius: 1,
+                          blurRadius: 7,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    width: double.infinity,
+                    child: Image.file(
+                      selectedImage,
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              }),
             ],
           ),
         ),
