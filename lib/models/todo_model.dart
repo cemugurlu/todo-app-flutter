@@ -9,7 +9,7 @@ class Todo {
   late RxBool isCompleted;
   late String userID;
   late DateTime? selectedDate;
-  late String imageUrl; // Add imageUrl field
+  late String imageUrl;
 
   late bool hasAttachment;
 
