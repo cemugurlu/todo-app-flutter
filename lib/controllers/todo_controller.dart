@@ -65,6 +65,13 @@ class TodoController extends GetxController {
     }
 
     if (userID != null) {
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+
       final newTodo = Todo(
         id: UniqueKey().toString(),
         title: todoNameValue,
@@ -72,7 +79,7 @@ class TodoController extends GetxController {
         selectedDate: selectedDate.value ?? DateTime.now(),
         description: notesValue,
         userID: userID,
-        imageUrl: '', // Initialize imageUrl
+        imageUrl: '',
       );
 
       if (attachedImage.value != null) {
@@ -80,6 +87,7 @@ class TodoController extends GetxController {
         if (imageUrl != null) {
           newTodo.imageUrl = imageUrl;
         } else {
+          Get.back();
           Get.snackbar('Error', 'Failed to upload image', snackPosition: SnackPosition.BOTTOM);
           return;
         }
@@ -94,6 +102,8 @@ class TodoController extends GetxController {
       selectedDate.value = null;
       selectedCategory.value = 'Work';
       attachedImage.value = null;
+
+      Get.back();
 
       Get.back();
     } else {
