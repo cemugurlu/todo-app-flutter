@@ -17,6 +17,11 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       initialRoute: '/',
       getPages: routes,
+      theme: ThemeData(
+        textTheme: Theme.of(context).textTheme.apply(
+              fontFamily: 'SanFrancisco',
+            ),
+      ),
     );
   }
 }

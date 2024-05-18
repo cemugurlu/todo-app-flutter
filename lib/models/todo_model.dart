@@ -11,6 +11,8 @@ class Todo {
   late DateTime? selectedDate;
   late String imageUrl; // Add imageUrl field
 
+  late bool hasAttachment;
+
   late bool selected;
 
   Todo({
@@ -22,7 +24,8 @@ class Todo {
     this.selectedDate,
     bool isCompleted = false,
     this.selected = false,
-    this.imageUrl = '', // Initialize imageUrl field
+    this.imageUrl = '',
+    this.hasAttachment = false,
   }) {
     this.isCompleted = isCompleted.obs;
   }
@@ -32,7 +35,11 @@ class Todo {
     _updateTodoInFirestore();
   }
 
-  void _updateTodoInFirestore() async {
+  void setAttachment(bool value) {
+    hasAttachment = value;
+  }
+
+  Future<void> _updateTodoInFirestore() async {
     try {
       await FirebaseFirestore.instance.collection('todos').doc(id).update({
         'isCompleted': isCompleted.value,
@@ -51,7 +58,8 @@ class Todo {
       'description': description,
       'userID': userID,
       'isCompleted': isCompleted.value,
-      'imageUrl': imageUrl, // Include imageUrl in the map
+      'imageUrl': imageUrl,
+      'hasAttachment': hasAttachment,
     };
   }
 
@@ -64,7 +72,8 @@ class Todo {
       description: map['description'],
       userID: map['userID'],
       isCompleted: map['isCompleted'] == true.obs,
-      imageUrl: map['imageUrl'] ?? '', // Assign imageUrl from map, default to empty string if not present
+      imageUrl: map['imageUrl'] ?? '',
+      hasAttachment: map['hasAttachment'] ?? false,
     );
   }
 }

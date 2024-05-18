@@ -205,6 +205,79 @@ class TodoController extends GetxController {
     }
   }
 
+  Future<void> addAttachmentToTodo(File file, String todoId) async {
+    try {
+      // Upload attachment to storage and get download URL
+      final String downloadUrl = await uploadAttachmentToStorage(file);
+
+      // Update todo with attachment URL
+      final Todo todo = todos.firstWhere((todo) => todo.id == todoId);
+      todo.imageUrl = downloadUrl;
+
+      // Set hasAttachment to true
+      todo.setAttachment(true);
+
+      // Update todo in Firestore
+      await updateTodoInFirestore(todo);
+
+      // Show success message or perform other actions
+    } catch (e) {
+      // Handle error
+      print('Failed to add attachment: $e');
+    }
+  }
+
+  Future<String> uploadAttachmentToStorage(File file) async {
+    try {
+      // Generate a unique filename
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Get reference to the storage bucket
+      Reference storageReference = FirebaseStorage.instance.ref().child('attachments').child(fileName);
+
+      // Upload the file to Firebase Storage
+      TaskSnapshot uploadTask = await storageReference.putFile(file);
+
+      //      // Get the download URL for the file
+      String downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      // Return the download URL
+      return downloadUrl;
+    } catch (e) {
+      // Handle error
+      throw Exception('Failed to upload attachment: $e');
+    }
+  }
+
+  Future<void> updateTodoInFirestore(Todo todo) async {
+    try {
+      await _todoCollection.doc(todo.id).update({
+        'imageUrl': todo.imageUrl,
+        'hasAttachment': todo.hasAttachment,
+      });
+      print('Todo updated successfully');
+    } catch (e) {
+      print('Failed to update todo: $e');
+    }
+  }
+
+  Future<void> deleteAttachmentFromTodo(String todoId) async {
+    try {
+      // Update todo with attachment URL as empty string
+      final Todo todo = todos.firstWhere((todo) => todo.id == todoId);
+      todo.imageUrl = '';
+      todo.setAttachment(false);
+
+      // Update todo in Firestore
+      await updateTodoInFirestore(todo);
+
+      // Show success message or perform other actions
+    } catch (e) {
+      // Handle error
+      print('Failed to delete attachment: $e');
+    }
+  }
+
   RxList<Todo> get todoList => todos;
 
   List<Todo> get todayTodos {

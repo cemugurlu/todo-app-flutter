@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/models/todo_model.dart';
+import 'package:plantist/pages/todo_detail_screen.dart';
 
 class TodoSection extends StatelessWidget {
   final String title;
@@ -74,13 +75,15 @@ class TodoSection extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: getRandomColor()),
                         ),
-                        child: Obx(() => Center(
-                              child: Icon(
-                                Icons.check,
-                                size: 16,
-                                color: todo.isCompleted.value ? Colors.black : Colors.transparent,
-                              ),
-                            )),
+                        child: Obx(
+                          () => Center(
+                            child: Icon(
+                              Icons.check,
+                              size: 16,
+                              color: todo.isCompleted.value ? Colors.black : Colors.transparent,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     title: Text(todo.title),
@@ -93,10 +96,11 @@ class TodoSection extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.calendar_today,
-                                  size: 16,
-                                ),
+                                if (todo.hasAttachment)
+                                  const Icon(
+                                    Icons.attach_file,
+                                    size: 16,
+                                  ),
                                 const SizedBox(width: 3),
                                 Text(formattedDate),
                               ],
@@ -110,7 +114,11 @@ class TodoSection extends StatelessWidget {
                         ),
                       ],
                     ),
-                    onTap: () {},
+                    onTap: () {
+                      Get.to(
+                        TodoDetailScreen(todo: todo),
+                      );
+                    },
                   ),
                 );
               }).toList(),

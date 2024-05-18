@@ -3,12 +3,12 @@ import 'package:get/get.dart';
 import 'package:plantist/controllers/todo_controller.dart';
 import 'package:plantist/models/todo_model.dart';
 import 'package:plantist/pages/add_todo_sheet_screen.dart';
+import 'package:plantist/todo_search_delegate.dart';
 import 'package:plantist/widgets/todo_section.dart';
 
 class TodoScreen extends StatelessWidget {
   final TodoController todoController = Get.put(TodoController());
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,6 +19,17 @@ class TodoScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: TodoSearchDelegate(todoController.todos),
+              );
+            },
+          ),
+        ],
       ),
       body: Obx(
         () {
@@ -98,29 +109,29 @@ class TodoScreen extends StatelessWidget {
   List<Todo> _sortTodos(List<Todo> todos) {
     return [...todos]..sort((a, b) => a.selectedDate!.compareTo(b.selectedDate!));
   }
-}
 
-void _showAddTodoBottomSheet(BuildContext context) {
-  final initialHeight = MediaQuery.of(context).size.height * 0.8;
+  void _showAddTodoBottomSheet(BuildContext context) {
+    final initialHeight = MediaQuery.of(context).size.height * 0.8;
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(20),
-        topRight: Radius.circular(20),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
-    ),
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return SizedBox(
-            height: initialHeight,
-            child: AddTodoSheetScreen(),
-          );
-        },
-      );
-    },
-  );
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              height: initialHeight,
+              child: AddTodoSheetScreen(),
+            );
+          },
+        );
+      },
+    );
+  }
 }

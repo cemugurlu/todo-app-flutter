@@ -24,9 +24,6 @@ dependencies:
   local_auth: ^2.1.4
   get_storage: ^2.1.1
 
-
-
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -37,7 +34,9 @@ flutter:
   assets:
     - assets/plantist_logo.png
   
-fonts:
-- family: sficonsets
   fonts:
-    - asset: packages/flutter_sfsymbols/fonts/sficonsets.ttf
+    - family: SanFrancisco
+      fonts:
+        - asset: assets/fonts/SFProText-Regular.ttf
+        - asset: assets/fonts/SFProText-Bold.ttf
+          weight: 700
