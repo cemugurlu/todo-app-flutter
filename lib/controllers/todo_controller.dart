@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:plantist/models/todo_model.dart';
 
 class TodoController extends GetxController {
@@ -169,13 +166,14 @@ class TodoController extends GetxController {
   List<Todo> get thisWeekTodos {
     final DateTime now = DateTime.now();
     final DateTime today = DateTime(now.year, now.month, now.day);
-
-    final DateTime threeDaysFromToday = today.add(const Duration(days: 3));
+    final DateTime tomorrow = today.add(const Duration(days: 1));
     final DateTime eightDaysFromToday = today.add(const Duration(days: 8));
 
     return todos.where((todo) {
-      final DateTime selectedDate = todo.selectedDate ?? DateTime.now();
-      return selectedDate.isAfter(today) && selectedDate.isBefore(eightDaysFromToday);
+      final DateTime selectedDate = todo.selectedDate ?? today;
+      return selectedDate.isAfter(today) &&
+          selectedDate.isBefore(eightDaysFromToday) &&
+          !isTomorrow(selectedDate, tomorrow);
     }).toList();
   }
 
