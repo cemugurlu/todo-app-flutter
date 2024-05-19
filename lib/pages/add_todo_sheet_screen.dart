@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:plantist/controllers/todo_controller.dart';
@@ -116,6 +117,27 @@ class AddTodoSheetScreen extends StatelessWidget {
                 trailing: const Icon(Icons.arrow_forward_ios, color: Colors.black),
               ),
             ),
+            const SizedBox(height: 20),
+            Obx(
+              () {
+                return DropdownButtonFormField<String>(
+                  value: todoController.selectedPriority.value,
+                  items: todoController.priorities.map((String priority) {
+                    return DropdownMenuItem<String>(
+                      value: priority,
+                      child: Text(priority),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    todoController.selectedPriority.value = newValue!;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Priority',
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
+            )
           ],
         ),
       ),

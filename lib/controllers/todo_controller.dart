@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -25,6 +24,13 @@ class TodoController extends GetxController {
     'Hobbies',
   ].obs;
   var selectedCategory = 'Work'.obs;
+
+  var priorities = [
+    'Low',
+    'Standard',
+    'High',
+  ].obs;
+  var selectedPriority = 'Standard'.obs;
 
   final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final RxBool isCalendarVisible = true.obs;
@@ -156,10 +162,13 @@ class TodoController extends GetxController {
           title: data['title'] ?? '',
           description: data['description'] ?? '',
           category: data['category'] ?? '',
-          selectedDate: (data['date'] as Timestamp).toDate(),
+          selectedDate: (data['selectedDate'] as Timestamp).toDate(),
           isCompleted: data['isCompleted'] ?? false,
           userID: data['userID'] ?? '',
           imageUrl: data['imageUrl'] ?? '',
+          priority: data['priority'] ?? 'Low',
+          tags: List<String>.from(data['tags'] ?? []),
+          hasAttachment: data['hasAttachment'] ?? false,
         );
       }).toList();
     } catch (e) {
@@ -173,10 +182,13 @@ class TodoController extends GetxController {
         'title': todo.title,
         'description': todo.description,
         'category': todo.category,
-        'date': todo.selectedDate,
+        'selectedDate': todo.selectedDate,
         'isCompleted': todo.isCompleted.value,
         'userID': todo.userID,
         'imageUrl': todo.imageUrl,
+        'priority': todo.priority,
+        'tags': todo.tags,
+        'hasAttachment': todo.hasAttachment,
         'createdAt': FieldValue.serverTimestamp(),
       });
       print('Todo added successfully');
@@ -188,7 +200,16 @@ class TodoController extends GetxController {
   void _updateTodoInFirestore(Todo todo) async {
     try {
       await _todoCollection.doc(todo.id).update({
+        'title': todo.title,
+        'description': todo.description,
+        'category': todo.category,
+        'selectedDate': todo.selectedDate,
         'isCompleted': todo.isCompleted.value,
+        'userID': todo.userID,
+        'imageUrl': todo.imageUrl,
+        'priority': todo.priority,
+        'tags': todo.tags,
+        'hasAttachment': todo.hasAttachment,
       });
       print('Todo updated successfully');
     } catch (e) {
@@ -207,41 +228,23 @@ class TodoController extends GetxController {
 
   Future<void> addAttachmentToTodo(File file, String todoId) async {
     try {
-      // Upload attachment to storage and get download URL
       final String downloadUrl = await uploadAttachmentToStorage(file);
 
-      // Update todo with attachment URL
       final Todo todo = todos.firstWhere((todo) => todo.id == todoId);
       todo.imageUrl = downloadUrl;
-
-      // Set hasAttachment to true
       todo.setAttachment(true);
-
-      // Update todo in Firestore
       await updateTodoInFirestore(todo);
-
-      // Show success message or perform other actions
     } catch (e) {
-      // Handle error
       print('Failed to add attachment: $e');
     }
   }
 
   Future<String> uploadAttachmentToStorage(File file) async {
     try {
-      // Generate a unique filename
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Get reference to the storage bucket
       Reference storageReference = FirebaseStorage.instance.ref().child('attachments').child(fileName);
-
-      // Upload the file to Firebase Storage
       TaskSnapshot uploadTask = await storageReference.putFile(file);
-
-      //      // Get the download URL for the file
       String downloadUrl = await uploadTask.ref.getDownloadURL();
-
-      // Return the download URL
       return downloadUrl;
     } catch (e) {
       // Handle error

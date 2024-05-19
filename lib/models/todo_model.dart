@@ -10,9 +10,10 @@ class Todo {
   late String userID;
   late DateTime? selectedDate;
   late String imageUrl;
+  late String priority; // Change from Priority to String
+  List<String> tags;
 
   late bool hasAttachment;
-
   late bool selected;
 
   Todo({
@@ -25,6 +26,8 @@ class Todo {
     bool isCompleted = false,
     this.selected = false,
     this.imageUrl = '',
+    this.priority = 'Low', // Default priority as string
+    this.tags = const [],
     this.hasAttachment = false,
   }) {
     this.isCompleted = isCompleted.obs;
@@ -65,12 +68,12 @@ class Todo {
 
   static Todo fromMap(Map<String, dynamic> map) {
     return Todo(
-      id: map['id'],
-      title: map['title'],
-      category: map['category'],
-      selectedDate: map['selectedDate']?.toDate(),
-      description: map['description'],
-      userID: map['userID'],
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      description: map['description'] ?? '',
+      category: map['category'] ?? '',
+      selectedDate: map['selectedDate'] != null ? (map['selectedDate'] as Timestamp).toDate() : null,
+      userID: map['userID'] ?? '',
       isCompleted: map['isCompleted'] == true.obs,
       imageUrl: map['imageUrl'] ?? '',
       hasAttachment: map['hasAttachment'] ?? false,
