@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import the intl package for date formatting
+import 'package:intl/intl.dart';
 import 'package:plantist/models/todo_model.dart';
 
 class TodoDetailScreen extends StatelessWidget {
@@ -73,17 +73,12 @@ class TodoDetailScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            Text(
-              'Tags: ${todo.tags.isNotEmpty ? todo.tags.join(', ') : 'None'}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
           ],
         ),
       ),
     );
   }
 
-  // Helper function to format the date
   String _formatDate(DateTime? date) {
     if (date != null) {
       return DateFormat('dd.MM.yyyy').format(date);

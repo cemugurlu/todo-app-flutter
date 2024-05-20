@@ -167,7 +167,6 @@ class TodoController extends GetxController {
           userID: data['userID'] ?? '',
           imageUrl: data['imageUrl'] ?? '',
           priority: data['priority'] ?? 'Low',
-          tags: List<String>.from(data['tags'] ?? []),
           hasAttachment: data['hasAttachment'] ?? false,
         );
       }).toList();
@@ -187,7 +186,6 @@ class TodoController extends GetxController {
         'userID': todo.userID,
         'imageUrl': todo.imageUrl,
         'priority': todo.priority,
-        'tags': todo.tags,
         'hasAttachment': todo.hasAttachment,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -208,7 +206,6 @@ class TodoController extends GetxController {
         'userID': todo.userID,
         'imageUrl': todo.imageUrl,
         'priority': todo.priority,
-        'tags': todo.tags,
         'hasAttachment': todo.hasAttachment,
       });
       print('Todo updated successfully');
@@ -247,7 +244,6 @@ class TodoController extends GetxController {
       String downloadUrl = await uploadTask.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      // Handle error
       throw Exception('Failed to upload attachment: $e');
     }
   }
@@ -266,17 +262,11 @@ class TodoController extends GetxController {
 
   Future<void> deleteAttachmentFromTodo(String todoId) async {
     try {
-      // Update todo with attachment URL as empty string
       final Todo todo = todos.firstWhere((todo) => todo.id == todoId);
       todo.imageUrl = '';
       todo.setAttachment(false);
-
-      // Update todo in Firestore
       await updateTodoInFirestore(todo);
-
-      // Show success message or perform other actions
     } catch (e) {
-      // Handle error
       print('Failed to delete attachment: $e');
     }
   }

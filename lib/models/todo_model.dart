@@ -10,9 +10,7 @@ class Todo {
   late String userID;
   late DateTime? selectedDate;
   late String imageUrl;
-  late String priority; // Change from Priority to String
-  List<String> tags;
-
+  late String priority;
   late bool hasAttachment;
   late bool selected;
 
@@ -26,8 +24,7 @@ class Todo {
     bool isCompleted = false,
     this.selected = false,
     this.imageUrl = '',
-    this.priority = 'Low', // Default priority as string
-    this.tags = const [],
+    this.priority = 'Low',
     this.hasAttachment = false,
   }) {
     this.isCompleted = isCompleted.obs;
